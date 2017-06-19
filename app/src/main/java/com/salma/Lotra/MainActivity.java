@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mGoogleMap.addMarker(new MarkerOptions()
                         .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                         .anchor(0.5f, 0.5f)
-                        .title(driverModel.DriverName)
+                        .title(dataSnapshot.getKey())
                         .snippet("Bus Number: " + driverModel.BusNumber)
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_2)));
 
@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
 
             }
 
@@ -111,7 +112,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public boolean onMarkerClick(Marker marker) {
                 Intent intent = new Intent(getApplicationContext(), LocationLiveTrackActivity.class);
-                intent.putExtra("key", marker.getTitle());
+                MarkerParce markerParce = new MarkerParce();
+                markerParce.mLat = marker.getPosition().latitude;
+                markerParce.mLng = marker.getPosition().longitude;
+                markerParce.mKey = marker.getTitle();
+                intent.putExtra("key", markerParce);
                 startActivity(intent);
                 return false;
             }

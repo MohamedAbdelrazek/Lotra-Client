@@ -1,14 +1,14 @@
 package com.salma.Lotra;
 
 import android.app.Dialog;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -16,7 +16,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -30,9 +29,10 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements OnMa
     private ChildEventListener mChildEventListener;
     FirebaseDatabase mFireBaseDatabase;
     private GoogleMap mGoogleMap;
+    private MarkerParce mMarkerParce;
     private String mKey;
+    LatLng mLatLng;
     private ArrayList<Marker> mMarkersArray;
-    PolylineOptions mPolylineOptions ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,17 +41,19 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements OnMa
             setContentView(R.layout.activity_location_live_track);
         }
 
-        mPolylineOptions=new PolylineOptions();
-        mKey = getIntent().getStringExtra("key");
+        mMarkerParce = (MarkerParce) getIntent().getSerializableExtra("key");
+        mKey = mMarkerParce.mKey;
+        mLatLng = new LatLng(mMarkerParce.mLat, mMarkerParce.mLng);
+
+
         initMap();
         mFireBaseDatabase = FirebaseDatabase.getInstance();
-        // mDatabaseRef = mFireBaseDatabase.getInstance().getReference().child("DriverInfo").child(mKey);
         mDatabaseRef = mFireBaseDatabase.getInstance().getReference().child("DriverInfo");
 
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                // Toast.makeText(LocationLiveTrackActivity.this, "" + dataSnapshot.getValue(), Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
@@ -63,8 +65,7 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements OnMa
                     DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
 
 
-
-                     mGoogleMap.addMarker(new MarkerOptions()
+                    mGoogleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                             .anchor(0.5f, 0.5f)
                             .title(driverModel.DriverName)
@@ -120,22 +121,12 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements OnMa
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
 
-        //to display tiny icon for user exact location
-        mGoogleMap.setMyLocationEnabled(true);
-
-        mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-
-                Toast.makeText(LocationLiveTrackActivity.this, "" + marker.getTitle(), Toast.LENGTH_SHORT).show();
-
-                return false;
-            }
-        });
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(mLatLng);
+        mGoogleMap.moveCamera(cameraUpdate);
+        mGoogleMap.addMarker(new MarkerOptions()
+                .position(mLatLng)
+                .anchor(0.5f, 0.5f).title(mKey)
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_2)));
     }
 }
