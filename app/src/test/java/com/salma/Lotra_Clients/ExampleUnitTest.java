@@ -1,4 +1,4 @@
-package com.salma.Lotra;
+package com.salma.Lotra_Clients;
 
 import org.junit.Test;
 

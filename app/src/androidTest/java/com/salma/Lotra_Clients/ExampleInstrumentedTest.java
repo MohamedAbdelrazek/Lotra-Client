@@ -1,4 +1,4 @@
-package com.salma.Lotra;
+package com.salma.Lotra_Clients;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
