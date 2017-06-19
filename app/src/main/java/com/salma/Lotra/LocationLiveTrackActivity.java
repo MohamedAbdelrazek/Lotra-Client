@@ -1,8 +1,9 @@
 package com.salma.Lotra;
 
 import android.app.Dialog;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -15,46 +16,62 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+import java.util.ArrayList;
+
+public class LocationLiveTrackActivity extends AppCompatActivity implements OnMapReadyCallback {
     private DatabaseReference mDatabaseRef;
     private ChildEventListener mChildEventListener;
     FirebaseDatabase mFireBaseDatabase;
     private GoogleMap mGoogleMap;
-
+    private String mKey;
+    private ArrayList<Marker> mMarkersArray;
+    PolylineOptions mPolylineOptions ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (googleServiceAvailable()) {
-            setContentView(R.layout.activity_main);
+            setContentView(R.layout.activity_location_live_track);
         }
+
+        mPolylineOptions=new PolylineOptions();
+        mKey = getIntent().getStringExtra("key");
         initMap();
         mFireBaseDatabase = FirebaseDatabase.getInstance();
+        // mDatabaseRef = mFireBaseDatabase.getInstance().getReference().child("DriverInfo").child(mKey);
         mDatabaseRef = mFireBaseDatabase.getInstance().getReference().child("DriverInfo");
 
         mChildEventListener = new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
-                mGoogleMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
-                        .anchor(0.5f, 0.5f)
-                        .title(driverModel.DriverName)
-                        .snippet("Bus Number: " + driverModel.BusNumber)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_2)));
-
+                // Toast.makeText(LocationLiveTrackActivity.this, "" + dataSnapshot.getValue(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                mMarkersArray = new ArrayList<>();
 
+                if (dataSnapshot.getKey().equals(mKey)) {
+
+                    DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
+
+
+
+                     mGoogleMap.addMarker(new MarkerOptions()
+                            .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
+                            .anchor(0.5f, 0.5f)
+                            .title(driverModel.DriverName)
+                            .snippet("Bus Number: " + driverModel.BusNumber)
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotsimage)));
+
+                }
             }
 
             @Override
@@ -79,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void initMap() {
-        SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment_id);
+        SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment_tracking_id);
         supportMapFragment.getMapAsync(this);
 
     }
@@ -103,16 +120,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-        Toast.makeText(this, "map is ready!", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
 
-        //  mGoogleMap.setMyLocationEnabled(true);
+        //to display tiny icon for user exact location
+        mGoogleMap.setMyLocationEnabled(true);
 
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Intent intent = new Intent(getApplicationContext(), LocationLiveTrackActivity.class);
-                intent.putExtra("key", marker.getTitle());
-                startActivity(intent);
+
+                Toast.makeText(LocationLiveTrackActivity.this, "" + marker.getTitle(), Toast.LENGTH_SHORT).show();
+
                 return false;
             }
         });
