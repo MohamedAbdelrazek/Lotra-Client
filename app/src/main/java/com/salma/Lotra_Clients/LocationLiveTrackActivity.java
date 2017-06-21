@@ -68,12 +68,8 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
                 if (dataSnapshot.getKey().equals(mKey)) {
-
                     DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
-
-
                     mGoogleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                             .anchor(0.5f, 0.5f)
@@ -110,8 +106,6 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
         supportMapFragment.getMapAsync(this);
 
     }
-
-
     public Boolean googleServiceAvailable() {
 
         GoogleApiAvailability apiClient = GoogleApiAvailability.getInstance();
@@ -147,8 +141,6 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
             return;
         }
         mGoogleMap.setMyLocationEnabled(true);
-
-
     }
 
     @Override
@@ -162,8 +154,6 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-
-
     }
 
     @Override

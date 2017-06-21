@@ -8,13 +8,15 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
@@ -61,7 +63,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                         .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                         .anchor(0.5f, 0.5f)
                         .title(dataSnapshot.getKey())
-                        .snippet("Bus Number: " + driverModel.BusNumber)
+                        .snippet("# OF Passengers: " + driverModel.NumberOfPassenger)
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_2)));
 
             }
@@ -118,18 +120,43 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
+
         mGoogleMap = googleMap;
 
         mGoogleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Intent intent = new Intent(getApplicationContext(), LocationLiveTrackActivity.class);
-                MarkerParceModel markerParceModel = new MarkerParceModel();
+                final MarkerParceModel markerParceModel = new MarkerParceModel();
                 markerParceModel.mLat = marker.getPosition().latitude;
                 markerParceModel.mLng = marker.getPosition().longitude;
                 markerParceModel.mKey = marker.getTitle();
-                intent.putExtra("key", markerParceModel);
-                startActivity(intent);
+
+                final AlertDialog dialog = new AlertDialog.Builder(MapActivity.this)
+                        .create();
+                LayoutInflater layoutInflater = LayoutInflater.from(MapActivity.this);
+                dialog.setView(layoutInflater.inflate(R.layout.message_dialog, null));
+                dialog.show();
+                Button okButton = (Button) dialog.findViewById(R.id.ok);
+                Button cancelButton = (Button) dialog.findViewById(R.id.cancel);
+                okButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        Intent intent = new Intent(getApplicationContext(), LocationLiveTrackActivity.class);
+                        intent.putExtra("key", markerParceModel);
+                        startActivity(intent);
+                    }
+                });
+
+                cancelButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+
+
                 return false;
             }
         });
@@ -164,45 +191,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             mGoogleMap.setMyLocationEnabled(true);
 
 
-
         }
 
-    }
-
-    public boolean checkLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Permission is required !")
-                        .setMessage("The app will shut down if the permission denied! ")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                //Prompt the user once explanation has been shown
-                                ActivityCompat.requestPermissions(MapActivity.this,
-                                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                                        REQUEST_LOCATION);
-                            }
-                        })
-                        .create()
-                        .show();
-
-
-            } else {
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_LOCATION);
-            }
-            return false;
-        } else {
-            return true;
-        }
     }
 
     @Override
@@ -253,12 +243,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 return super.onOptionsItemSelected(item);
 
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        NavUtils.navigateUpFromSameTask(this);
     }
 
     private void cleanUp() {

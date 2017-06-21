@@ -11,4 +11,5 @@ public class DriverModel {
     String Email;
     Double Latitude;
     Double Longitude;
+    public int NumberOfPassenger;
 }
