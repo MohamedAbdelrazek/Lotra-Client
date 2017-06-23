@@ -27,7 +27,7 @@ public class SignInActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_in);
         if (!isNetworkAvailable()) {
             Toast.makeText(this, "Check the internet connection and try again !", Toast.LENGTH_SHORT).show();
-            // finish();
+             finish();
         }
         FirebaseAuth auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {

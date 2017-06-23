@@ -1,6 +1,5 @@
 package com.salma.Lotra_Clients;
 
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,11 +16,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -47,9 +43,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (googleServiceAvailable()) {
+
             setContentView(R.layout.activity_main);
-        }
+
         initMap();
         mFireBaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseRef = mFireBaseDatabase.getInstance().getReference().child("DriverInfo");
@@ -59,6 +55,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
                 DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
+
+
                 mGoogleMap.addMarker(new MarkerOptions()
                         .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                         .anchor(0.5f, 0.5f)
@@ -97,26 +95,12 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
 
     private void initMap() {
-        SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment_id);
+       SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment_id);
         supportMapFragment.getMapAsync(this);
 
     }
 
 
-    public Boolean googleServiceAvailable() {
-
-        GoogleApiAvailability apiClient = GoogleApiAvailability.getInstance();
-        int isAvailable = apiClient.isGooglePlayServicesAvailable(this);
-        if (isAvailable == ConnectionResult.SUCCESS) {
-            return true;
-        } else if (apiClient.isUserResolvableError(isAvailable)) {
-            Dialog dialog = apiClient.getErrorDialog(this, isAvailable, 0);
-            dialog.show();
-        } else {
-            Toast.makeText(this, "Cant Connect to play services !", Toast.LENGTH_SHORT).show();
-        }
-        return false;
-    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {

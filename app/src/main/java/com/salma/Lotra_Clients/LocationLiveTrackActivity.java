@@ -1,12 +1,14 @@
 package com.salma.Lotra_Clients;
 
 import android.app.Dialog;
-import android.content.Context;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
@@ -38,8 +40,8 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
     private MarkerParceModel mMarkerParceModel;
     private String mKey;
     LatLng mLatLng;
-    private LocationManager locationManager;
     private GoogleApiClient mGoogleApiClient;
+    private Location mUSerLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +49,6 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
         if (googleServiceAvailable()) {
             setContentView(R.layout.activity_location_live_track);
         }
-
-
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         mMarkerParceModel = (MarkerParceModel) getIntent().getSerializableExtra("key");
         mKey = mMarkerParceModel.mKey;
@@ -70,12 +69,24 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 if (dataSnapshot.getKey().equals(mKey)) {
                     DriverModel driverModel = dataSnapshot.getValue(DriverModel.class);
+
                     mGoogleMap.addMarker(new MarkerOptions()
                             .position(new LatLng(driverModel.Latitude, driverModel.Longitude))
                             .anchor(0.5f, 0.5f)
                             .title(driverModel.DriverName)
                             .snippet("Bus Number: " + driverModel.BusNumber)
                             .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotsimage)));
+
+                    try {
+
+
+                        if (CompareDistanceAndNotifiUser(mUSerLocation, new LatLng(driverModel.Latitude, driverModel.Longitude))) {
+
+                            showNotification();
+                        }
+                    } catch (Exception e) {
+
+                    }
 
                 }
             }
@@ -100,12 +111,59 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
 
     }
 
+    private void showNotification() {
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.location_image)
+                        .setContentTitle("You get a Notification from Lotra App")
+                        .setContentText("The Bus is Few Steps near you, get ready for riding!");
+
+
+        Intent resultIntent = new Intent(this, LocationLiveTrackActivity.class);
+
+        resultIntent.putExtra("key", mMarkerParceModel);
+
+        PendingIntent resultPendingIntent =
+                PendingIntent.getActivity(
+                        this,
+                        0,
+                        resultIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        mBuilder.setContentIntent(resultPendingIntent);
+
+
+        int mNotificationId = 001;
+
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+
+
+    }
+
+    private Boolean CompareDistanceAndNotifiUser(Location mUSerLocation, LatLng latLng) {
+
+        Location location = new Location("");
+        location.setLatitude(latLng.latitude);
+        location.setLongitude(latLng.longitude);
+
+
+        Float aFloat = mUSerLocation.distanceTo(location);
+        if (aFloat < 300.00) {
+            return true;
+        }
+        return false;
+    }
+
 
     private void initMap() {
         SupportMapFragment supportMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map_fragment_tracking_id);
         supportMapFragment.getMapAsync(this);
 
     }
+
     public Boolean googleServiceAvailable() {
 
         GoogleApiAvailability apiClient = GoogleApiAvailability.getInstance();
@@ -171,6 +229,8 @@ public class LocationLiveTrackActivity extends AppCompatActivity implements Loca
                     .title("MY LOCATION")
                     .snippet("You are here!")
                     .icon(BitmapDescriptorFactory.fromResource(R.drawable.dotsimage)));
+
+            mUSerLocation = location;
         }
     }
 }
